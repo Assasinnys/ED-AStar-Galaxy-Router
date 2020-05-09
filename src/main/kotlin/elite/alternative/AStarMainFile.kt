@@ -69,15 +69,10 @@ class AStarMainFile {
     }
 
     private fun findStarPointWithMinCost(): StarPoint {
-        var nextStarPoint = openedList[0]
-        openedList.forEach { point ->
-            when {
-//                point.isNeutronStar -> return point
-                point.costF < nextStarPoint.costF -> nextStarPoint = point
-            }
+        return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
+            println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
+                    "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}")
         }
-        println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}")
-        return nextStarPoint
     }
 
     private fun findNeighbours(starPoint: StarPoint) {
