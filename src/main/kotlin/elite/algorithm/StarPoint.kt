@@ -15,8 +15,9 @@ class StarPoint(
     finishCoords: Coordinates
 ) {
 
+    val costH: Int = calculateCostH(finishCoords)
     val costG: Double = calculateCostG(distance)
-    val costF: Double = calculateCostF(finishCoords)
+    val costF: Double = calculateCostF()
 
     private fun calculateCostG(distance: Double): Double {
         if (distance == 0.0) return 0.0
@@ -32,9 +33,9 @@ class StarPoint(
         return previousCostG.plus(costGForStarPoint)
     }
 
-    private fun calculateCostF(finishCoords: Coordinates): Double {
+    private fun calculateCostF(): Double {
         return if (previousStarPoint != null) {
-            costG.plus(calculateCostH(finishCoords))
+            costG.plus(costH)
         } else {
             0.0
         }
