@@ -180,7 +180,7 @@ fun calcTime(timeStart: Long): Double = System.currentTimeMillis().minus(timeSta
 }*/
 
 //TODO alternative MAIN with work in file
-/*fun main(args: Array<String>) {
+fun main(args: Array<String>) {
     println("Start A Star with file table")
 
     val time = System.currentTimeMillis()
@@ -190,10 +190,10 @@ fun calcTime(timeStart: Long): Double = System.currentTimeMillis().minus(timeSta
     aStar.activateAStarAlgorithm()
 
     println("Complete with time: ${calcTime(time)}")
-}*/
+}
 
 //TODO MAIN METHOD
-fun main(args: Array<String>) {
+/*fun main(args: Array<String>) {
     println("Start!")
     val timeStartProgram = System.currentTimeMillis()
 
@@ -204,7 +204,7 @@ fun main(args: Array<String>) {
     algorithm.activateAStarAlgorithm()
 
     println("Work complete. Time spent ${calcTime(timeStartProgram)}")
-}
+}*/
 
 // systems
 const val SOL = "Sol"

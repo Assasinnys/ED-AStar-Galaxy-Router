@@ -18,6 +18,7 @@ import java.sql.ResultSet
 //TODO check neighbors StarPoint's for better way (lower cost) [ready 50%]
 
 class AStarMain(private val startSystem: String, private val finishSystem: String) {
+/*
     private val database = Database()
     private val finishStarPoint: StarPoint = createFinishStarPoint()
     private val startStarPoint: StarPoint = createStartStarPoint()
@@ -33,7 +34,9 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 //        println("finishStarPoint=${finishStarPoint.systemId64}")
     }
 
-    fun activateAStarAlgorithm()/*: Pair<Int, Int>*/ {
+    fun activateAStarAlgorithm()*/
+/*: Pair<Int, Int>*//*
+ {
 
         findNeighbours(startStarPoint)
 
@@ -230,6 +233,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
         val id64: Long,
         val coords: Coordinates
     )
+*/
 
     companion object {
         const val CORRIDOR = "coridor3"
