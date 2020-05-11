@@ -3,8 +3,9 @@ package elite.utils
 class Stopwatch {
     private var startTime: Long = 0L
 
-    fun start() {
+    fun start(): Stopwatch {
         startTime = System.currentTimeMillis()
+        return this
     }
 
     fun stopWithConsoleOutput(prefix: String = "Time: ") {

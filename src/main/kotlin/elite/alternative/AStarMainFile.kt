@@ -41,13 +41,13 @@ class AStarMainFile {
         }
 
         do {
-
+            val sw = Stopwatch().start()
             if (checkForFinish()) {
                 println("${consoleStringCounter()} Finish found.")
                 printTheFoundPath()
                 return
             }
-
+            sw.stopWithConsoleOutput("CheckForFinish time: ")
             val selectedStarPoint = findStarPointWithMinCost()
             findNeighbours(selectedStarPoint)
             openedList.remove(selectedStarPoint)
@@ -69,15 +69,23 @@ class AStarMainFile {
     }
 
     private fun findStarPointWithMinCost(): StarPoint {
+        val sw = Stopwatch().start()
         return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
-            println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, H = ${nextStarPoint.costH} " +
-                    "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}")
+            sw.stopWithConsoleOutput("FIND MIN COST TIME: ")
+            println(
+                "Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, H = ${nextStarPoint.costH} " +
+                        "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}"
+            )
         }
     }
 
     private fun findNeighbours(starPoint: StarPoint) {
+        val sw1 = Stopwatch().start()
+        val sw2 = Stopwatch().start()
         val reader = file.bufferedReader().lines()
+        sw2.stopWithConsoleOutput("READ:LINES time: ")
         reader.forEach { line ->
+
             val sArray = line.split(" ")
             val coords = Coordinates(
                 sArray[1].toDouble(),
@@ -122,6 +130,7 @@ class AStarMainFile {
             }
         }
         reader.close()
+        sw1.stopWithConsoleOutput("Find neighbors time (openListSize = ${openedList.size}): ")
     }
 
     private fun printTheFoundPath(): Int {
