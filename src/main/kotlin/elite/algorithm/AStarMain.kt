@@ -25,6 +25,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
     private val openedList = mutableListOf<StarPoint>()
     private val closedList = mutableListOf<StarPoint>()
+    private val stopwatch = Stopwatch()
 
     init {
         openedList.add(startStarPoint)
@@ -74,15 +75,18 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     }
 
     private fun findStarPointWithMinCost(): StarPoint {
+        stopwatch.start()
         return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
             println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
                     "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}")
+            stopwatch.stopWithConsoleOutput("Min cost find time: ")
         }
     }
 
     private fun findNeighbours(starPoint: StarPoint) {
         checkConnection()
 
+        stopwatch.start()
         val resultSet = database.query(
             "select $C_ID64, $C_X, $C_Y, $C_Z, $C_SUBTYPE = 'Neutron Star' as isNeutronStar, " +
                     "$C_SYS_NAME, " +
@@ -93,6 +97,10 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                     )}" +
                     "and not $C_ID64=${starPoint.systemId64}"
         )
+        stopwatch.stopWithConsoleOutput("Query time: ")
+        stopwatch.start()
+
+        val sw2 = Stopwatch()
 
         while (resultSet.next()) {
             with(resultSet) {
@@ -103,14 +111,17 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                     ), getBoolean("isNeutronStar"), getDouble("dist"),
                     getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
                 )
+                sw2.start()
                 if (closedList.notContains(newStarPoint)) {
 //                openedList.addIfAbsent(newStarPoint)
 //                openedList.smartAdd(newStarPoint)
                     openedList.smartAdd2(newStarPoint)
                 }
+                sw2.stopWithConsoleOutput("Add to openList time: ")
             }
         }
         resultSet.close()
+        stopwatch.stopWithConsoleOutput("Process time: ")
     }
 
     private fun isNeutronDistance(isNeutron: Boolean) = if (isNeutron) NEUTRON_DISTANCE else USUAL_DISTANCE
