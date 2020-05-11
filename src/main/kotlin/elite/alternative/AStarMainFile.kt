@@ -13,7 +13,7 @@ import kotlin.system.exitProcess
 //TODO check neighbors StarPoint's for better way (lower cost) [ready 50%]
 
 class AStarMainFile {
-    private val coords = Coordinates(-2275.3125, -1140.5312, 1284.9688)
+/*    private val coords = Coordinates(-2275.3125, -1140.5312, 1284.9688)
     private val finishStarPoint = StarPoint(null, 216165812715L, coords, true, 0.0, null, 0, coords)
 
     private val startStarPoint =
@@ -146,7 +146,7 @@ class AStarMainFile {
 //        db.closeDB()
         println("${consoleStringCounter()} Total jumps counter = $counter, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
         return counter
-    }
+    }*/
 
     companion object {
         const val NEUTRON_DISTANCE = 240
