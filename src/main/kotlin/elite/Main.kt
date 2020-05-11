@@ -20,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import sun.audio.AudioPlayer
 import java.io.File
 import java.io.FileInputStream
 import java.nio.file.Files
@@ -67,7 +66,7 @@ var replaces = 0
 
 fun calcTime(timeStart: Long): Double = System.currentTimeMillis().minus(timeStart).div(1000.0)
 
-fun startCoroutineQuery(systemName: String) {
+/*fun startCoroutineQuery(systemName: String) {
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     coroutineScope.launch {
@@ -88,7 +87,7 @@ fun startCoroutineQuery(systemName: String) {
         println("Coroutine complete query ${systemName}. Time: ${calcTime(startCoroutineTime)}")
         database.closeDB()
     }
-}
+}*/
 
 
 /*fun addToResultList(result: Int) {
@@ -183,17 +182,6 @@ fun startCoroutineQuery(systemName: String) {
 //TODO alternative MAIN with work in file
 /*fun main(args: Array<String>) {
     println("Start A Star with file table")
-    val thread = Thread{
-        val inputStream = FileInputStream("sound.mp3")
-        val player = Player(inputStream)
-        try {
-            while (true) {
-                player.play()
-            }
-        } finally {
-            player.close()
-        }
-    }.apply {  isDaemon = true }.start()
 
     val time = System.currentTimeMillis()
     println("Distance modifier $DISTANCE_MODIFIER")

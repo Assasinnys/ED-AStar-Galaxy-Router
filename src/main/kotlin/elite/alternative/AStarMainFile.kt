@@ -32,13 +32,13 @@ class AStarMainFile {
 
         findNeighbours(startStarPoint)
 
+        openedList.remove(startStarPoint)
+        closedList.add(startStarPoint)
+
         if (openedList.isEmpty()) {
             println("${consoleStringCounter()}Unable to complete task. No neighbors found near startStarPoint. =(")
             return
         }
-
-        openedList.remove(startStarPoint)
-        closedList.add(startStarPoint)
 
         do {
 
@@ -70,7 +70,7 @@ class AStarMainFile {
 
     private fun findStarPointWithMinCost(): StarPoint {
         return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
-            println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
+            println("Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, H = ${nextStarPoint.costH} " +
                     "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}")
         }
     }
@@ -125,19 +125,25 @@ class AStarMainFile {
     }
 
     private fun printTheFoundPath(): Int {
+//        val db = Database().apply { openConnection() }
         var starPoint = finishStarPoint.previousStarPoint!!
         var counter = 0
         var fullDistance = 0.0
         while (starPoint != startStarPoint) {
+//            val systemName = db.query("select ${Database.C_SYS_NAME} FROM ${AStarMain.CORRIDOR} WHERE ${Database.C_ID64} = ${starPoint.systemId64}").let {
+//                it.next()
+//                it.getString(Database.C_SYS_NAME)
+//            }
             println(
                 "${consoleStringCounter()} Point $counter id = ${starPoint.systemId64}, " +
-//                    "name = ${starPoint.systemName} " +
+//                        "name = $systemName " +
                         "distance = ${starPoint.distance}, G = ${starPoint.costG}, F = ${starPoint.costF}"
             )
             fullDistance += starPoint.distance
             starPoint = starPoint.previousStarPoint!!
             counter++
         }
+//        db.closeDB()
         println("${consoleStringCounter()} Total jumps counter = $counter, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
         return counter
     }
