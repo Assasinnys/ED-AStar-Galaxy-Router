@@ -56,6 +56,7 @@ fun MutableList<StarPoint>.smartAdd(newStarPoint: StarPoint) {
     }
 }
 
+@Synchronized
 fun MutableList<StarPoint>.smartAdd2(newStarPoint: StarPoint) {
     if (this.notContains(newStarPoint)) {
         this.add(newStarPoint)
