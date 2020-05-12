@@ -30,13 +30,14 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     private val closedList = mutableListOf<StarPoint>()
     private val stopwatch = Stopwatch()
 
-    private val threadPool = Executors.newFixedThreadPool(2)
-
-    val db1 = Database().apply { openConnection() }
-    val db2 = Database().apply { openConnection() }
+    private val threadPool = Executors.newFixedThreadPool(NUM_OF_THREADS)
+    private val dbList = mutableListOf<Database>()
 
     init {
         openedList.add(startStarPoint)
+        repeat(NUM_OF_THREADS) {
+            dbList.add(Database().apply { openConnection() })
+        }
 //        println("startStarPoint=${startStarPoint.systemId64}")
 //        println("finishStarPoint=${finishStarPoint.systemId64}")
     }
@@ -96,36 +97,36 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     }
 
     private fun multithreatingFindNeighbours(starPoint: StarPoint) {
-        var firstRange = 0 to 30
-        var secondRange = 30 to 60
-        if (starPoint.isNeutronStar) {
-            firstRange = 0 to 120
-            secondRange = 120 to 240
-        }
-        val sql1 = "select $C_ID64, $C_X, $C_Y, $C_Z, $C_SUBTYPE = 'Neutron Star' as isNeutronStar, " +
-                "$C_SYS_NAME, " +
-                "sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) as dist\n" +
-                "from $CORRIDOR\n" +
-                "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) between ${firstRange.first} and ${firstRange.second}" +
-                "and not $C_ID64=${starPoint.systemId64}"
-        val sql2 = "select $C_ID64, $C_X, $C_Y, $C_Z, $C_SUBTYPE = 'Neutron Star' as isNeutronStar, " +
-                "$C_SYS_NAME, " +
-                "sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) as dist\n" +
-                "from $CORRIDOR\n" +
-                "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) between ${secondRange.first} and ${secondRange.second}" +
-                "and not $C_ID64=${starPoint.systemId64}"
-
+        val range = if (starPoint.isNeutronStar)
+            NEUTRON_DISTANCE.div(NUM_OF_THREADS)
+        else
+            USUAL_DISTANCE.div(NUM_OF_THREADS)
+        val sqlList = mutableListOf<String>()
         val taskList = mutableListOf<Future<*>>()
-        taskList.add(
-            threadPool.submit {
-                findNeighbours(starPoint, sql1, db1)
-            }
-        )
-        taskList.add(
-            threadPool.submit {
-                findNeighbours(starPoint, sql2, db2)
-            }
-        )
+        val maxJump = if (starPoint.isNeutronStar)
+            NEUTRON_DISTANCE
+        else
+            USUAL_DISTANCE
+
+        for (i in 0 until maxJump step range) {
+            val sql = "select $C_ID64, $C_X, $C_Y, $C_Z, $C_SUBTYPE = 'Neutron Star' as isNeutronStar, " +
+                    "$C_SYS_NAME, " +
+                    "sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) as dist\n" +
+                    "from $CORRIDOR\n" +
+                    "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) between $i and ${i.plus(
+                        range
+                    )}" +
+                    "and not $C_ID64=${starPoint.systemId64}"
+            sqlList.add(sql)
+        }
+
+        for (i in 0 until NUM_OF_THREADS) {
+            taskList.add(
+                threadPool.submit {
+                    findNeighbours(starPoint, sqlList[i], dbList[i])
+                }
+            )
+        }
 
         taskList.forEach {
             it.get()
@@ -272,8 +273,9 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             counter++
         }
         println("${consoleStringCounter()} Total jumps counter = $counter, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
-        db1.closeDB()
-        db2.closeDB()
+        dbList.forEach { db ->
+            db.closeDB()
+        }
         return counter
     }
 
@@ -287,5 +289,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
         const val CORRIDOR = "main"
         const val NEUTRON_DISTANCE = 240
         const val USUAL_DISTANCE = 60
+        const val NUM_OF_THREADS = 3
     }
 }
