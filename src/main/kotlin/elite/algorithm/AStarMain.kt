@@ -26,14 +26,15 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     private val startStarPoint: StarPoint = createStartStarPoint()
 
 
-    private val openedList = mutableListOf<StarPoint>()
-    private val closedList = mutableListOf<StarPoint>()
+    private val openedList = /*mutableListOf<StarPoint>()*/ hashMapOf<Long, StarPoint>()
+    private val closedList = /*mutableListOf<StarPoint>()*/ hashMapOf<Long, StarPoint>()
     private val stopwatch = Stopwatch()
 
     private val threadPool = Executors.newSingleThreadExecutor()
 
     init {
-        openedList.add(startStarPoint)
+//        openedList.add(startStarPoint)
+        openedList[startStarPoint.systemId64] = startStarPoint
 //        println("startStarPoint=${startStarPoint.systemId64}")
 //        println("finishStarPoint=${finishStarPoint.systemId64}")
     }
@@ -47,8 +48,9 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             return
         }
 
-        openedList.remove(startStarPoint)
-        closedList.add(startStarPoint)
+//        openedList.remove(startStarPoint)
+        openedList.remove(startStarPoint.systemId64)
+        closedList[startStarPoint.systemId64] = startStarPoint
 
         do {
 
@@ -60,8 +62,9 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
             val selectedStarPoint = findStarPointWithMinCost()
             multithreatingFindNeighbours(selectedStarPoint)
-            openedList.remove(selectedStarPoint)
-            closedList.add(selectedStarPoint)
+//            openedList.remove(selectedStarPoint)
+            openedList.remove(selectedStarPoint.systemId64)
+            closedList[selectedStarPoint.systemId64] = selectedStarPoint
 
         } while (openedList.isNotEmpty())
 
@@ -70,24 +73,37 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     }
 
     private fun checkForFinish(): Boolean {
-        openedList.forEach { point ->
-            if (point == finishStarPoint) {
-                finishStarPoint.previousStarPoint = point
-                return true
-            }
+        if (openedList.containsKey(finishStarPoint.systemId64)) {
+            finishStarPoint.previousStarPoint = openedList[finishStarPoint.systemId64]
+            return true
         }
+//        openedList.forEach { id64, point ->
+//            if (point == finishStarPoint) {
+//                finishStarPoint.previousStarPoint = point
+//                return true
+//            }
+//        }
         return false
     }
 
     private fun findStarPointWithMinCost(): StarPoint {
         stopwatch.start()
-        return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
+        return openedList.minBy {
+            it.value.costF
+        }!!.value.also {
             println(
-                "Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
-                        "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}"
+                "Min cost star point: G = ${it.costG}, F = ${it.costF}, " +
+                        "dist = ${it.distance}, start = ${it.previousStarPoint == startStarPoint}"
             )
             stopwatch.stopWithConsoleOutput("Min cost find time: ")
         }
+//        return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
+//            println(
+//                "Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
+//                        "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}"
+//            )
+//            stopwatch.stopWithConsoleOutput("Min cost find time: ")
+//        }
     }
 
     private fun multithreatingFindNeighbours(starPoint: StarPoint) {
@@ -119,7 +135,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                     ), getBoolean("isNeutronStar"), getDouble("dist"),
                     getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
                 )
-                if (closedList.notContains(newStarPoint)) {
+                if (closedList.notContains(newStarPoint.systemId64)) {
 //                openedList.addIfAbsent(newStarPoint)
 //                openedList.smartAdd(newStarPoint)
                     openedList.smartAdd2(newStarPoint)
@@ -240,7 +256,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     )
 
     companion object {
-        const val CORRIDOR = "coridor3"
+        const val CORRIDOR = "main"
         const val NEUTRON_DISTANCE = 240
         const val USUAL_DISTANCE = 60
     }

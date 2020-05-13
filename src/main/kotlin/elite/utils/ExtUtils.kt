@@ -42,33 +42,33 @@ fun <T> MutableList<T>.addIfAbsent(element: T) {
         this.add(element)
 }
 
-fun MutableList<StarPoint>.smartAdd(newStarPoint: StarPoint) {
-    if (this.notContains(newStarPoint)) {
-        this.add(newStarPoint)
+fun HashMap<Long, StarPoint>.smartAdd(newStarPoint: StarPoint) {
+    if (this.notContains(newStarPoint.systemId64)) {
+        this[newStarPoint.systemId64] = newStarPoint
     } else {
-        val oldStarPoint = this[this.indexOf(newStarPoint)]
+        val oldStarPoint = this[newStarPoint.systemId64]!!
 //        println("${consoleStringCounter()} Old star point G -> ${oldStarPoint.costG} vs ${newStarPoint.costG} <- new star point G")
         if (oldStarPoint.costG > newStarPoint.costG) {
-            this.remove(oldStarPoint)
-            this.add(newStarPoint)
+            this.remove(oldStarPoint.systemId64)
+            this[newStarPoint.systemId64] = newStarPoint
             replaces = replaces.plus(1)
         }
     }
 }
 
 @Synchronized
-fun MutableList<StarPoint>.smartAdd2(newStarPoint: StarPoint) {
-    if (this.notContains(newStarPoint)) {
-        this.add(newStarPoint)
+fun HashMap<Long, StarPoint>.smartAdd2(newStarPoint: StarPoint) {
+    if (this.notContains(newStarPoint.systemId64)) {
+        this[newStarPoint.systemId64] = newStarPoint
     } else {
-        val oldStarPoint = this[this.indexOf(newStarPoint)]
+        val oldStarPoint = this[newStarPoint.systemId64]!!
 //        println("${consoleStringCounter()} Old star point jumps -> ${oldStarPoint.jumpCounter} vs ${newStarPoint.jumpCounter} <- new star point jumps")
         if (oldStarPoint.jumpCounter > newStarPoint.jumpCounter) {
-            this.remove(oldStarPoint)
-            this.add(newStarPoint)
+            this.remove(oldStarPoint.systemId64)
+            this[newStarPoint.systemId64] = newStarPoint
             replaces = replaces.plus(1)
         }
     }
 }
 
-fun <T> MutableList<T>.notContains(element: T) = !this.contains(element)
+fun <K, V> HashMap<K, V>.notContains(key: K) = !this.contains(key)
