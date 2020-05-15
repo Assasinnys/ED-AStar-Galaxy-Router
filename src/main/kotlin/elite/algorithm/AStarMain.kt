@@ -1,7 +1,5 @@
 package elite.algorithm
 
-import elite.algorithm.StarPoint
-import elite.algorithm.StarPoint.Companion.NEUTRON_COF
 import elite.database.Database
 import elite.database.Database.Companion.C_ID64
 import elite.database.Database.Companion.C_SUBTYPE
@@ -14,8 +12,6 @@ import elite.replaces
 import elite.utils.*
 import java.sql.ResultSet
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.FutureTask
 
 //TODO check for neutron as a second star
 //TODO check neighbors StarPoint's for better way (lower cost) [ready 50%]
@@ -26,14 +22,13 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     private val startStarPoint: StarPoint = createStartStarPoint()
 
 
-    private val openedList = /*mutableListOf<StarPoint>()*/ hashMapOf<Long, StarPoint>()
-    private val closedList = /*mutableListOf<StarPoint>()*/ hashMapOf<Long, StarPoint>()
+    private val openedList = hashMapOf<Long, StarPoint>()
+    private val closedList = hashMapOf<Long, StarPoint>()
     private val stopwatch = Stopwatch()
 
     private val threadPool = Executors.newSingleThreadExecutor()
 
     init {
-//        openedList.add(startStarPoint)
         openedList[startStarPoint.systemId64] = startStarPoint
 //        println("startStarPoint=${startStarPoint.systemId64}")
 //        println("finishStarPoint=${finishStarPoint.systemId64}")
@@ -48,7 +43,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             return
         }
 
-//        openedList.remove(startStarPoint)
         openedList.remove(startStarPoint.systemId64)
         closedList[startStarPoint.systemId64] = startStarPoint
 
@@ -62,7 +56,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
             val selectedStarPoint = findStarPointWithMinCost()
             multithreatingFindNeighbours(selectedStarPoint)
-//            openedList.remove(selectedStarPoint)
             openedList.remove(selectedStarPoint.systemId64)
             closedList[selectedStarPoint.systemId64] = selectedStarPoint
 
@@ -77,12 +70,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             finishStarPoint.previousStarPoint = openedList[finishStarPoint.systemId64]
             return true
         }
-//        openedList.forEach { id64, point ->
-//            if (point == finishStarPoint) {
-//                finishStarPoint.previousStarPoint = point
-//                return true
-//            }
-//        }
         return false
     }
 
@@ -97,13 +84,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             )
             stopwatch.stopWithConsoleOutput("Min cost find time: ")
         }
-//        return openedList.minBy { starPoint -> starPoint.costF }!!.also { nextStarPoint ->
-//            println(
-//                "Min cost star point: G = ${nextStarPoint.costG}, F = ${nextStarPoint.costF}, " +
-//                        "dist = ${nextStarPoint.distance}, start = ${nextStarPoint.previousStarPoint == startStarPoint}"
-//            )
-//            stopwatch.stopWithConsoleOutput("Min cost find time: ")
-//        }
     }
 
     private fun multithreatingFindNeighbours(starPoint: StarPoint) {
@@ -136,8 +116,6 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                     getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
                 )
                 if (closedList.notContains(newStarPoint.systemId64)) {
-//                openedList.addIfAbsent(newStarPoint)
-//                openedList.smartAdd(newStarPoint)
                     openedList.smartAdd2(newStarPoint)
                 }
 
