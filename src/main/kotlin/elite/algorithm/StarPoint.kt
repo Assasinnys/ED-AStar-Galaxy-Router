@@ -41,8 +41,17 @@ class StarPoint(
         }
     }
 
-    override fun equals(other: Any?) =
-        if (other != null && other is StarPoint) this.systemId64 == other.systemId64 else false
+    override fun equals(other: Any?): Boolean {
+        return if (other != null && other is StarPoint) {
+            if (this.systemId64 == other.systemId64) {
+                true
+            } else {
+                super.equals(other)
+            }
+        } else {
+            super.equals(other)
+        }
+    }
 
     private fun calculateCostH(finishCoords: Coordinates) =
         calcDistance(coords.x, finishCoords.x, coords.y, finishCoords.y, coords.z, finishCoords.z).toInt()
