@@ -38,13 +38,13 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
         multithreatingFindNeighbours(startStarPoint)
 
+        openedList.remove(startStarPoint.systemId64)
+        closedList[startStarPoint.systemId64] = startStarPoint
+
         if (openedList.isEmpty()) {
             println("${consoleStringCounter()}Unable to complete task. No neighbors found near startStarPoint. =(")
             return
         }
-
-        openedList.remove(startStarPoint.systemId64)
-        closedList[startStarPoint.systemId64] = startStarPoint
 
         do {
 
