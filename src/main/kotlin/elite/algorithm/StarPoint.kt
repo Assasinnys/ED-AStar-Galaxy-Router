@@ -68,7 +68,7 @@ class StarPoint(
 
     companion object {
         const val DISTANCE_MODIFIER = 100
-        const val NEUTRON_COF = 340       // Default
+        const val NEUTRON_COF = 0       // Default
     }
 
     // division

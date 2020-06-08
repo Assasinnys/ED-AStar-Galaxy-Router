@@ -36,7 +36,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
     fun activateAStarAlgorithm() {
 
-        multithreatingFindNeighbours(startStarPoint)
+        multithreatingFindNeighbours(startStarPoint, 1)
 
         openedList.remove(startStarPoint.systemId64)
         closedList[startStarPoint.systemId64] = startStarPoint
@@ -55,7 +55,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             }
 
             val selectedStarPoint = findStarPointWithMinCost()
-            multithreatingFindNeighbours(selectedStarPoint)
+            multithreatingFindNeighbours(selectedStarPoint, 1)
             openedList.remove(selectedStarPoint.systemId64)
             closedList[selectedStarPoint.systemId64] = selectedStarPoint
 
@@ -86,43 +86,52 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
         }
     }
 
-    private fun multithreatingFindNeighbours(starPoint: StarPoint) {
+    private fun multithreatingFindNeighbours(starPoint: StarPoint, jumpModifier: Int) {
         val maxRange = isNeutronDistance(starPoint.isNeutronStar)
         val sql = "select $C_ID64, $C_X, $C_Y, $C_Z, $C_SUBTYPE = 'Neutron Star' as isNeutronStar, " +
                 "$C_SYS_NAME, " +
                 "sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) as dist\n" +
                 "from $CORRIDOR\n" +
-                "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) between 0 and $maxRange" +
+                "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) " +
+                "between 0 and ${maxRange.plus(jumpModifier.minus(1).times(60))}" +
                 "and not $C_ID64=${starPoint.systemId64}"
 
-        threadPool.submit {
-            findNeighbours(starPoint, sql)
-        }.get()
+//        threadPool.submit {
+            findNeighbours(starPoint, sql, jumpModifier)
+//        }.get()
     }
 
-    private fun findNeighbours(starPoint: StarPoint, sql: String) {
+    private fun findNeighbours(starPoint: StarPoint, sql: String, jumpModifier: Int) {
         checkConnection()
+        var smartAdd = false
 
         val sw = Stopwatch().apply { start() }
         val resultSet = database.query(sql)
 
         while (resultSet.next()) {
             with(resultSet) {
-                val newStarPoint = StarPoint(
-                    starPoint, getLong(C_ID64), Coordinates(
-                        getDouble(C_X), getDouble(C_Y),
-                        getDouble(C_Z)
-                    ), getBoolean("isNeutronStar"), getDouble("dist"),
-                    getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
-                )
-                if (closedList.notContains(newStarPoint.systemId64)) {
-                    openedList.smartAdd2(newStarPoint)
-                }
+                val isNeutronStar = getBoolean("isNeutronStar")
+                val coords = Coordinates(getDouble(C_X), getDouble(C_Y), getDouble(C_Z))
 
+                if (isNeutronStar || coords == finishStarPoint.coords) {
+                    val newStarPoint = StarPoint(
+                        starPoint, getLong(C_ID64), coords,
+                        isNeutronStar, getDouble("dist"),
+                        getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
+                    )
+                    if (closedList.notContains(newStarPoint.systemId64)) {
+                        openedList.smartAdd2(newStarPoint)
+                        smartAdd = true
+                    }
+                }
             }
         }
         resultSet.close()
         sw.stopWithConsoleOutput("Process time: ")
+
+        if (!smartAdd) {
+            multithreatingFindNeighbours(starPoint, jumpModifier.plus(1))
+        }
     }
 
     private fun isNeutronDistance(isNeutron: Boolean) = if (isNeutron) NEUTRON_DISTANCE else USUAL_DISTANCE
@@ -234,7 +243,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
     )
 
     companion object {
-        const val CORRIDOR = "main"
+        const val CORRIDOR = "coridor3"
         const val NEUTRON_DISTANCE = 240
         const val USUAL_DISTANCE = 60
     }
