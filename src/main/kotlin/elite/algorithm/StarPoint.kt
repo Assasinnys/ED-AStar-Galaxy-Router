@@ -24,7 +24,7 @@ class StarPoint(
 
         val previousCostG = previousStarPoint?.costG ?: 0.0
         val costGForStarPoint = if (isNeutronStar)
-            DISTANCE_MODIFIER.minus(distance).minus(NEUTRON_COF)
+            DISTANCE_MODIFIER.div(distance)
 //            DISTANCE_MODIFIER.div(distance).minus(NEUTRON_COF)
         else
             DISTANCE_MODIFIER.minus(distance)
@@ -67,7 +67,7 @@ class StarPoint(
     }
 
     companion object {
-        const val DISTANCE_MODIFIER = 100
+        const val DISTANCE_MODIFIER = 10000     // 10k
         const val NEUTRON_COF = 0       // Default
     }
 

@@ -13,7 +13,7 @@ import elite.utils.*
 import java.sql.ResultSet
 import java.util.concurrent.Executors
 
-//TODO check for neutron as a second star
+//TODO check for neutron as a second star -> [future 0%]
 //TODO check neighbors StarPoint's for better way (lower cost) [ready 50%]
 
 class AStarMain(private val startSystem: String, private val finishSystem: String) {
@@ -93,7 +93,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                 "sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) as dist\n" +
                 "from $CORRIDOR\n" +
                 "where sqrt((${starPoint.coords.x}-x)^2+(${starPoint.coords.y}-y)^2+(${starPoint.coords.z}-z)^2) " +
-                "between 0 and ${maxRange.plus(jumpModifier.minus(1).times(60))}" +
+                "between 0 and ${maxRange.plus(jumpModifier.minus(1).times(USUAL_DISTANCE))}" +
                 "and not $C_ID64=${starPoint.systemId64}"
 
 //        threadPool.submit {
@@ -103,7 +103,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
 
     private fun findNeighbours(starPoint: StarPoint, sql: String, jumpModifier: Int) {
         checkConnection()
-        var smartAdd = false
+        var isNoResult = true
 
         val sw = Stopwatch().apply { start() }
         val resultSet = database.query(sql)
@@ -117,11 +117,11 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
                     val newStarPoint = StarPoint(
                         starPoint, getLong(C_ID64), coords,
                         isNeutronStar, getDouble("dist"),
-                        getString(C_SYS_NAME), starPoint.jumpCounter.plus(1), finishStarPoint.coords
+                        getString(C_SYS_NAME), starPoint.jumpCounter.plus(jumpModifier), finishStarPoint.coords
                     )
                     if (closedList.notContains(newStarPoint.systemId64)) {
                         openedList.smartAdd2(newStarPoint)
-                        smartAdd = true
+                        isNoResult = false
                     }
                 }
             }
@@ -129,7 +129,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
         resultSet.close()
         sw.stopWithConsoleOutput("Process time: ")
 
-        if (!smartAdd) {
+        if (isNoResult) {
             multithreatingFindNeighbours(starPoint, jumpModifier.plus(1))
         }
     }
@@ -232,7 +232,7 @@ class AStarMain(private val startSystem: String, private val finishSystem: Strin
             starPoint = starPoint.previousStarPoint!!
             counter++
         }
-        println("${consoleStringCounter()} Total jumps counter = $counter, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
+        println("${consoleStringCounter()} Total jumps counter = ${finishStarPoint.previousStarPoint?.jumpCounter}, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
         return counter
     }
 

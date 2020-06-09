@@ -6,7 +6,7 @@ import elite.replaces
 import elite.utils.*
 import java.io.File
 
-//TODO check for neutron as a second star
+//TODO check for neutron as a second star -> [future 0%]
 //TODO check neighbors StarPoint's for better way (lower cost) [ready 50%]
 
 class AStarMainFile {
@@ -23,15 +23,16 @@ class AStarMainFile {
     private val stopwatch = Stopwatch()
 
     init {
-        openedList[startStarPoint.systemId64] = startStarPoint
+//        openedList[startStarPoint.systemId64] = startStarPoint
+        closedList[startStarPoint.systemId64] = startStarPoint
     }
 
     fun activateAStarAlgorithm() {
 
-        findNeighbours(startStarPoint)
+        findNeighbours(startStarPoint, 1)
 
-        openedList.remove(startStarPoint.systemId64)
-        closedList[startStarPoint.systemId64] = startStarPoint
+//        openedList.remove(startStarPoint.systemId64)
+
 
         if (openedList.isEmpty()) {
             println("${consoleStringCounter()}Unable to complete task. No neighbors found near startStarPoint. =(")
@@ -47,7 +48,7 @@ class AStarMainFile {
             }
 
             val selectedStarPoint = findStarPointWithMinCost()
-            findNeighbours(selectedStarPoint)
+            findNeighbours(selectedStarPoint, 1)
             openedList.remove(selectedStarPoint.systemId64)
             closedList[selectedStarPoint.systemId64] = selectedStarPoint
 
@@ -73,11 +74,12 @@ class AStarMainFile {
                 "Min cost star point: G = ${it.costG}, F = ${it.costF}, " +
                         "dist = ${it.distance}, start = ${it.previousStarPoint == startStarPoint}"
             )
-            stopwatch.stopWithConsoleOutput("Min cost find time: ")
+            stopwatch.stopWithConsoleOutput("openList size = ${openedList.size}; Min cost find time: ")
         }
     }
 
-    private fun findNeighbours(starPoint: StarPoint) {
+    private fun findNeighbours(starPoint: StarPoint, jumpModifier: Int) {
+        var isNoResult = true
         val reader = file.bufferedReader().lines()
         reader.forEach { line ->
             val sArray = line.split(" ")
@@ -94,35 +96,34 @@ class AStarMainFile {
                 coords.z,
                 starPoint.coords.z
             )
+            val maxRange = NEUTRON_DISTANCE.plus(jumpModifier.minus(1).times(USUAL_DISTANCE))
+            val isNeutronStar = sArray[4].toBoolean()
 
-            if (starPoint.isNeutronStar && distance <= NEUTRON_DISTANCE) {
+            if ((isNeutronStar || coords == finishStarPoint.coords) &&
+                distance <= maxRange
+            ) {
                 val newStarPoint = StarPoint(
                     starPoint, sArray[0].toLong(),
                     coords,
-                    sArray[4].toBoolean(),
+                    isNeutronStar,
                     distance,
                     null,
-                    starPoint.jumpCounter.plus(1),
-                    finishStarPoint.coords
-                )
-                if (closedList.notContains(newStarPoint.systemId64))
-                    openedList.smartAdd2(newStarPoint)
-
-            } else if (!starPoint.isNeutronStar && distance <= USUAL_DISTANCE) {
-                val newStarPoint = StarPoint(
-                    starPoint, sArray[0].toLong(),
-                    coords,
-                    sArray[4].toBoolean(),
-                    distance,
-                    null,
-                    starPoint.jumpCounter.plus(1),
+                    starPoint.jumpCounter.plus(jumpModifier),
                     finishStarPoint.coords
                 )
 
-                if (closedList.notContains(newStarPoint.systemId64))
+                if (closedList.notContains(newStarPoint.systemId64) && newStarPoint != starPoint) {
                     openedList.smartAdd2(newStarPoint)
+                    isNoResult = false
+                }
             }
         }
+
+        if (isNoResult) {
+            reader.close()
+            findNeighbours(starPoint, jumpModifier.plus(1))
+        }
+
         reader.close()
     }
 
@@ -146,7 +147,7 @@ class AStarMainFile {
             counter++
         }
 //        db.closeDB()
-        println("${consoleStringCounter()} Total jumps counter = $counter, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
+        println("${consoleStringCounter()} Total jumps counter = ${finishStarPoint.previousStarPoint?.jumpCounter}, distance = $fullDistance ly, replaces = $replaces, cof = ${StarPoint.NEUTRON_COF}")
         return counter
     }
 
